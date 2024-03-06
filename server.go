@@ -15,12 +15,34 @@ func Render(ctx echo.Context, statusCode int, t templ.Component) error {
 	return t.Render(ctx.Request().Context(), ctx.Response().Writer)
 }
 
+func customHTTPErrorHandler(err error, c echo.Context) {
+	code := http.StatusInternalServerError
+
+	httpError, ok := err.(*echo.HTTPError)
+	if ok {
+		code = httpError.Code
+	}
+	c.Logger().Error(err)
+	errorPage := fmt.Sprintf("static/%d.html", code)
+
+	fileError := c.File(errorPage)
+	if fileError != nil {
+		c.Logger().Error(err)
+	}
+}
+
 func main() {
 	e := echo.New()
 	fmt.Println("hello creature ...")
 
+	e.HTTPErrorHandler = customHTTPErrorHandler
+
 	e.GET("/", func(c echo.Context) error {
-		return Render(c, http.StatusOK, layout.MainLayout("Chris"))
+		return Render(c, http.StatusOK, layout.MainLayout("Home"))
+	})
+
+	e.GET("/posts", func(c echo.Context) error {
+		return Render(c, http.StatusOK, layout.MainLayout("Posts"))
 	})
 
 	e.Start(":8080")
