@@ -6,7 +6,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
-	"wohlburger.io/layout"
+	"wohlburger.io/page"
 )
 
 func Render(ctx echo.Context, statusCode int, t templ.Component) error {
@@ -38,11 +38,7 @@ func main() {
 	e.HTTPErrorHandler = customHTTPErrorHandler
 
 	e.GET("/", func(c echo.Context) error {
-		return Render(c, http.StatusOK, layout.MainLayout("Home"))
-	})
-
-	e.GET("/posts", func(c echo.Context) error {
-		return Render(c, http.StatusOK, layout.MainLayout("Posts"))
+		return Render(c, http.StatusOK, page.Home())
 	})
 
 	e.Start(":8080")
