@@ -23,7 +23,7 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 		code = httpError.Code
 	}
 	c.Logger().Error(err)
-	errorPage := fmt.Sprintf("static/%d.html", code)
+	errorPage := fmt.Sprintf("pubic/error/%d.html", code)
 
 	fileError := c.File(errorPage)
 	if fileError != nil {
