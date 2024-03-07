@@ -29,7 +29,7 @@ func Home() templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h1>Welcome to my page!</h1>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article id=\"article\"><p>Hello and welcome to my part of the internet. I write about building software and related topics. Enjoy!</p></article>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

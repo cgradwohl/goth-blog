@@ -1,7 +1,19 @@
 package page
 
 templ MainLayout() {
-	<div id="wrapper">
-		{ children... }
-	</div>
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    	<meta name="color-scheme" content="light dark" />
+		<link rel="stylesheet" href="/css/pico.cyan.min.css" />
+		<title>Wohlburger</title>
+	</head>
+	<body>
+		<main class="container">
+			{ children... }
+		</main>
+	</body>
+	</html>
 }

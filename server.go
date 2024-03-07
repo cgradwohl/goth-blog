@@ -23,11 +23,12 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 		code = httpError.Code
 	}
 	c.Logger().Error(err)
-	errorPage := fmt.Sprintf("pubic/error/%d.html", code)
+
+	errorPage := fmt.Sprintf("public/error/%d.html", code)
 
 	fileError := c.File(errorPage)
 	if fileError != nil {
-		c.Logger().Error(err)
+		c.Logger().Error(fileError)
 	}
 }
 
@@ -36,6 +37,8 @@ func main() {
 	fmt.Println("hello creature ...")
 
 	e.HTTPErrorHandler = customHTTPErrorHandler
+
+	e.Static("/", "public")
 
 	e.GET("/", func(c echo.Context) error {
 		return Render(c, http.StatusOK, page.Home())
