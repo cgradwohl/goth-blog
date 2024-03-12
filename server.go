@@ -1,11 +1,17 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"golang.org/x/crypto/acme"
+	"golang.org/x/crypto/acme/autocert"
 	"wohlburger.io/page"
 )
 
@@ -32,17 +38,111 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	}
 }
 
-func main() {
-	e := echo.New()
-	fmt.Println("hello creature ...")
+type Config struct {
+	addr string
+	tls  *tls.Config
+}
 
+func NewConfig() Config {
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "dev"
+	}
+
+	if env == "production" {
+		autoTLSManager := autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			Cache:      autocert.DirCache("/var/www/.cache"),
+			HostPolicy: autocert.HostWhitelist("<DOMAIN>"),
+		}
+
+		return Config{
+			addr: ":443",
+			tls: &tls.Config{
+				GetCertificate: autoTLSManager.GetCertificate,
+				NextProtos:     []string{acme.ALPNProto},
+			},
+		}
+	}
+
+	return Config{
+		addr: ":3000",
+	}
+}
+
+func NewHandler() *echo.Echo {
+	e := echo.New()
 	e.HTTPErrorHandler = customHTTPErrorHandler
 
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
 	e.Static("/", "public")
 
 	e.GET("/", func(c echo.Context) error {
 		return Render(c, http.StatusOK, page.Home())
 	})
 
-	e.Start(":8080")
+	return e
+}
+
+type Server struct {
+	addr    string
+	handler *echo.Echo
+	tls     *tls.Config
+}
+
+func NewServer() (*Server, error) {
+	config := NewConfig()
+	handler := NewHandler()
+
+	return &Server{
+		addr:    config.addr,
+		handler: handler,
+		tls:     config.tls,
+	}, nil
+}
+
+func (server *Server) start() error {
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "dev"
+	}
+
+	httpServer := &http.Server{
+		Addr:    server.addr,
+		Handler: server.handler,
+	}
+
+	if env == "production" {
+		autoTLSManager := autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			Cache:      autocert.DirCache("/var/www/.cache"),
+			HostPolicy: autocert.HostWhitelist("<DOMAIN>"),
+		}
+
+		server.tls = &tls.Config{
+			GetCertificate: autoTLSManager.GetCertificate,
+			NextProtos:     []string{acme.ALPNProto},
+		}
+
+		httpServer.TLSConfig = server.tls
+		// TODO: add certificates for production
+		log.Printf("hello creature...listening on %s in Prod", server.addr)
+		return httpServer.ListenAndServeTLS("", "")
+	}
+
+	log.Printf("hello creature...listening on %s in Dev", server.addr)
+	return httpServer.ListenAndServe()
+}
+
+func main() {
+	server, err := NewServer()
+	if err != nil {
+		panic(err)
+	}
+
+	err = server.start()
+	if err != nil && err != http.ErrServerClosed {
+		panic(err)
+	}
 }
