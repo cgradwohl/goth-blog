@@ -3,17 +3,27 @@ package page
 templ MainLayout() {
 	<!DOCTYPE html>
 	<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    	<meta name="color-scheme" content="light dark" />
-		<link rel="stylesheet" href="/css/pico.cyan.min.css" />
-		<title>Wohlburger</title>
-	</head>
-	<body>
-		<main class="container">
-			{ children... }
-		</main>
-	</body>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta name="color-scheme" content="light dark"/>
+			<link rel="stylesheet" href="/css/pico.cyan.min.css"/>
+			<title>Wohlburger</title>
+		</head>
+		<body>
+			<main class="container">
+				<nav>
+					<ul>
+						<li><a href="/"><strong>HOME</strong></a></li>
+					</ul>
+					// <ul>
+					// 	<li><a href="#">About</a></li>
+					// 	<li><a href="#">Services</a></li>
+					// 	<li><a href="#">Products</a></li>
+					// </ul>
+				</nav>
+				{ children... }
+			</main>
+		</body>
 	</html>
 }
