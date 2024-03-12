@@ -70,19 +70,23 @@ func NewConfig() Config {
 	}
 }
 
-func NewHandler() *echo.Echo {
-	e := echo.New()
-	e.HTTPErrorHandler = customHTTPErrorHandler
+func NewRouter() *echo.Echo {
+	router := echo.New()
+	router.HTTPErrorHandler = customHTTPErrorHandler
 
-	e.Use(middleware.Recover())
-	e.Use(middleware.Logger())
-	e.Static("/", "public")
+	router.Use(middleware.Recover())
+	router.Use(middleware.Logger())
+	router.Static("/", "public")
 
-	e.GET("/", func(c echo.Context) error {
+	router.GET("/", func(c echo.Context) error {
 		return Render(c, http.StatusOK, page.Home())
 	})
 
-	return e
+	router.GET("/foo", func(c echo.Context) error {
+		return Render(c, http.StatusOK, page.Foo())
+	})
+
+	return router
 }
 
 type Server struct {
@@ -93,11 +97,11 @@ type Server struct {
 
 func NewServer() (*Server, error) {
 	config := NewConfig()
-	handler := NewHandler()
+	router := NewRouter()
 
 	return &Server{
 		addr:    config.addr,
-		handler: handler,
+		handler: router,
 		tls:     config.tls,
 	}, nil
 }
