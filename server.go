@@ -38,38 +38,6 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	}
 }
 
-type Config struct {
-	addr string
-	tls  *tls.Config
-}
-
-func NewConfig() Config {
-	env := os.Getenv("ENV")
-	if env == "" {
-		env = "dev"
-	}
-
-	if env == "production" {
-		autoTLSManager := autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			Cache:      autocert.DirCache("/var/www/.cache"),
-			HostPolicy: autocert.HostWhitelist("<DOMAIN>"),
-		}
-
-		return Config{
-			addr: ":443",
-			tls: &tls.Config{
-				GetCertificate: autoTLSManager.GetCertificate,
-				NextProtos:     []string{acme.ALPNProto},
-			},
-		}
-	}
-
-	return Config{
-		addr: ":3000",
-	}
-}
-
 func NewRouter() *echo.Echo {
 	router := echo.New()
 	router.HTTPErrorHandler = customHTTPErrorHandler
@@ -90,53 +58,57 @@ func NewRouter() *echo.Echo {
 }
 
 type Server struct {
-	addr    string
-	handler *echo.Echo
-	tls     *tls.Config
+	addr   string
+	cert   string
+	key    string
+	router *echo.Echo
+	tls    *tls.Config
 }
 
 func NewServer() (*Server, error) {
-	config := NewConfig()
+	env := os.Getenv("ENV")
 	router := NewRouter()
 
+	autoTLSManager := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		Cache:      autocert.DirCache("/var/www/.cache"),
+		HostPolicy: autocert.HostWhitelist("<DOMAIN>"),
+	}
+
+	tls := &tls.Config{
+		GetCertificate: autoTLSManager.GetCertificate,
+		NextProtos:     []string{acme.ALPNProto},
+	}
+
+	if env == "production" {
+		return &Server{
+			addr:   ":443",
+			cert:   "", // TODO: add TLD signed cert
+			key:    "", // TODO: add TLD public key
+			router: router,
+			tls:    tls,
+		}, nil
+	}
+
 	return &Server{
-		addr:    config.addr,
-		handler: router,
-		tls:     config.tls,
+		addr:   ":3000",
+		cert:   "cert.pem",
+		key:    "key.pem",
+		router: router,
+		tls:    tls,
 	}, nil
 }
 
 func (server *Server) start() error {
 	env := os.Getenv("ENV")
-	if env == "" {
-		env = "dev"
-	}
 
 	httpServer := &http.Server{
 		Addr:    server.addr,
-		Handler: server.handler,
+		Handler: server.router,
 	}
 
-	if env == "production" {
-		autoTLSManager := autocert.Manager{
-			Prompt:     autocert.AcceptTOS,
-			Cache:      autocert.DirCache("/var/www/.cache"),
-			HostPolicy: autocert.HostWhitelist("<DOMAIN>"),
-		}
-
-		server.tls = &tls.Config{
-			GetCertificate: autoTLSManager.GetCertificate,
-			NextProtos:     []string{acme.ALPNProto},
-		}
-
-		httpServer.TLSConfig = server.tls
-		// TODO: add certificates for production
-		log.Printf("hello creature...listening on %s in Prod", server.addr)
-		return httpServer.ListenAndServeTLS("", "")
-	}
-
-	log.Printf("hello creature...listening on %s in Dev", server.addr)
-	return httpServer.ListenAndServe()
+	log.Printf("hello creature...listening on %s in %s", server.addr, env)
+	return httpServer.ListenAndServeTLS(server.cert, server.key)
 }
 
 func main() {
