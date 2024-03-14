@@ -29,7 +29,7 @@ func Home() templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article id=\"article\"><p>Hello and welcome to my part of the internet. I write about building software and related topics. Enjoy!</p></article><article><a href=\"/foo\">Foo</a></article>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<article id=\"article\"><p>Hello and welcome to my part of the internet. I write about building software and related topics. Enjoy!</p></article><article><a href=\"/foo\">Foo</a></article><article><header>March 13, 2024</header><h2>Containers for Web Applications on AWS</h2><p>Deciding were and how to run your containers on AWS can be confusing, but it doesn't have to be!</p></article><article><header>Header</header>Body</article>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
